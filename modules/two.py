@@ -1,22 +1,62 @@
-def procesar_lectura_roblox(payload, sid_guardado, estado_pines_actual):
-    """
-    Valida el SID enviado desde el juego de Roblox y retorna los pines correspondientes.
-    """
-    # 1. Verificar si ya se configuró un SID en la interfaz web
-    if not sid_guardado:
-        return {"error": "Servidor no configurado. Entra a la web primero y define un SID."}, 400
+from flask import Flask, render_template, request, jsonify
+from modules import two
+import json
+import os
 
-    # 2. Validar que el HTTP Transmitter esté enviando el SID correcto
-    if not payload or payload.get("sid") != sid_guardado:
-        print(f"[ALERTA SEGURIDAD] Intento de lectura bloqueado. El SID no coincide.")
-        return {"error": "No autorizado / El SID no coincide"}, 401
+app = Flask(__name__)
+DATABASE_FILE = "datos.json"
 
-    # 3. Mostrar log de éxito en la consola de Render
-    print(f"[ROBLOX API] Petición exitosa con SID '{sid_guardado}'. Enviando: {estado_pines_actual}")
+def guardar_en_disco(sid, pines):
+    with open(DATABASE_FILE, "w") as f:
+        json.dump({"sid": sid, "data": pines}, f)
+
+def leer_de_disco():
+    if not os.path.exists(DATABASE_FILE):
+        return None, [0, 0, 0, 0, 0, 0, 0, 0]
+    try:
+        with open(DATABASE_FILE, "r") as f:
+            contenido = json.load(f)
+            return contenido.get("sid"), contenido.get("data")
+    except:
+        return None, [0, 0, 0, 0, 0, 0, 0, 0]
+
+# --- PÁGINA 1: PANEL WEB (VISTA) ---
+@app.route('/', methods=['GET'])
+def home():
+    return render_template('index.html')
+
+# --- TRANSMITIR DESDE LA WEB (POST con Alerta) ---
+@app.route('/actualizar-pines', methods=['POST'])
+def actualizar_pines():
+    payload = request.get_json()
+    if not payload or "sid" not in payload or "data" not in payload:
+        return jsonify({"success": False, "error": "Datos inválidos"}), 400
     
-    # 4. Responder con la estructura JSON que lee de forma nativa Build Logic!
-    return {
-        "success": True,
-        "data": estado_pines_actual
-    }, 200
-  
+    guardar_en_disco(payload.get("sid"), payload.get("data"))
+    print(f"[WEB POST] Transmisión exitosa guardada en disco.")
+    
+    return jsonify({
+        "success": True, 
+        "message": "¡Alerta! Configuración transmitida al servidor con éxito"
+    }), 200
+
+# --- PÁGINA 2: LECTURA UNIVERSAL DESDE ROBLOX (GET y POST) ---
+@app.route('/leer-transmisor', methods=['GET', 'POST'])
+def leer_transmisor():
+    # Extraer el método actual, argumentos de la URL y cuerpo JSON
+    metodo = request.method
+    argumentos = request.args
+    json_body = request.get_json(silent=True)
+    
+    # Recuperar datos guardados
+    sid_web, pines_actuales = leer_de_disco()
+    
+    # Procesar con el módulo 'two' universal
+    respuesta, codigo_estado = two.procesar_lectura_roblox(
+        metodo, argumentos, json_body, sid_web, pines_actuales
+    )
+    
+    return jsonify(respuesta), codigo_estado
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
