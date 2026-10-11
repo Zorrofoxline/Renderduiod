@@ -2,27 +2,27 @@
 
 def procesar_lectura_roblox(metodo, argumentos, json_body, sid_guardado, estado_pines_actual):
     """
-    Procesador Universal GET y POST para leer los pines desde el juego.
+    Valida las credenciales universales de Build Logic de forma segura.
     """
-    # 1. Verificar si el servidor ya tiene datos guardados
-    if not sid_guardado:
-        return {"error": "Servidor vacio. Configura el panel web primero."}, 400
+    # Si por alguna razón el disco está vacío, prevenir la caída
+    if not sid_guardado or sid_guardado == "por_defecto":
+        return {"error": "Servidor vacío. Configura tu SID en el panel web primero."}, 400
 
-    # 2. Extraer el SID dinámicamente según el método usado por el HTTP Transmitter
+    # Extraer el SID según el canal de transmisión elegido
     sid_roblox = None
     if metodo == 'GET':
-        sid_roblox = argumentos.get('sid') # Consigue de la URL (?sid=...)
+        sid_roblox = argumentos.get('sid')
     elif metodo == 'POST':
         if json_body:
-            sid_roblox = json_body.get('sid') # Consigue del JSON interno
+            sid_roblox = json_body.get('sid')
 
-    # 3. Validar contraseña (SID)
+    # Validar contraseña
     if not sid_roblox or sid_roblox != sid_guardado:
-        print(f"[ALERTA] Acceso denegado via {metodo}. El SID no coincide.")
+        print(f"[ACCESO RECHAZADO] Canal {metodo}. SID incorrecto.")
         return {"error": "SID no coincide o no autorizado"}, 401
 
-    # 4. Enviar los pines limpios al juego
-    print(f"[ROBLOX {metodo}] Solicitud exitosa. Enviando pines: {estado_pines_actual}")
+    # Respuesta exitosa para los pines Data Out
+    print(f"[CONEXIÓN EXITOSA {metodo}] Transmitiendo pines: {estado_pines_actual}")
     return {
         "success": True,
         "data": estado_pines_actual
