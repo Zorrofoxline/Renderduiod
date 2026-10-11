@@ -1,28 +1,30 @@
-def procesar_lectura_roblox(metodo, argumentos, json_body, cabeceras, sid_guardado, estado_pines_actual):
+def procesar_lectura_roblox(metodo, argumentos, formulario, cabeceras, sid_guardado, estado_pines_actual):
     """
-    Procesador Universal que extrae el SID de las cabeceras HTTP de Roblox.
+    Procesador Universal compatible con application/x-www-form-urlencoded
     """
     if not sid_guardado or sid_guardado == "por_defecto":
         return {"error": "Servidor vacio. Configura el panel web primero."}, 400
 
-    # 1. INTENTO PRINCIPAL: Buscar el SID en las cabeceras (Headers) enviados por Roblox
-    sid_roblox = cabeceras.get('sid')
-
-    # 2. INTENTOS DE RESPALDO: Si no viene en los headers, buscar en URL o JSON
+    # 1. Buscar el SID en el formulario urlencoded, cabeceras o URL
+    sid_roblox = None
+    if formulario:
+        sid_roblox = formulario.get('sid') # Lee si viene como campo de formulario
+    
     if not sid_roblox:
-        if metodo == 'GET':
-            sid_roblox = argumentos.get('sid')
-        elif metodo == 'POST' and json_body:
-            sid_roblox = json_body.get('sid')
+        sid_roblox = cabeceras.get('sid') # Lee si viene como Header
+        
+    if not sid_roblox and metodo == 'GET':
+        sid_roblox = argumentos.get('sid') # Lee si viene en la URL (?sid=...)
 
-    # 3. Validar contraseña (SID)
+    # 2. Validar credenciales de seguridad (Asegurando manejo de strings planos)
     if not sid_roblox or str(sid_roblox).strip() != str(sid_guardado).strip():
-        print(f"[ACCESO DENEGADO 401] SID Recibido: '{sid_roblox}' | SID Esperado: '{sid_guardado}'")
-        return {"error": "SID no coincide o no autorizado"}, 401
+        print(f"[ACCESO RECHAZADO 401] Recibido: '{sid_roblox}' | Esperado: '{sid_guardado}'")
+        return {"error": "SID no coincide o acceso no autorizado"}, 401
 
-    # 4. Éxito total: Enviar los 8 bits al HTTP Transmitter
-    print(f"[CONEXION EXITOSA] Entregando pines via cabeceras HTTP: {estado_pines_actual}")
+    # 3. Retornar la estructura limpia requerida para el juego
+    print(f"[CONEXION EXITOSA] Enviando los 8 bits: {estado_pines_actual}")
     return {
         "success": True,
+        "sid": str(sid_guardado),
         "data": estado_pines_actual
     }, 200
