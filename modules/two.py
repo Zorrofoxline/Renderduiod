@@ -1,28 +1,27 @@
-# Guardar en: modules/two.py
-
-def procesar_lectura_roblox(metodo, argumentos, json_body, sid_guardado, estado_pines_actual):
+def procesar_lectura_roblox(metodo, argumentos, json_body, cabeceras, sid_guardado, estado_pines_actual):
     """
-    Valida las credenciales universales de Build Logic de forma segura.
+    Procesador Universal que extrae el SID de las cabeceras HTTP de Roblox.
     """
-    # Si por alguna razón el disco está vacío, prevenir la caída
     if not sid_guardado or sid_guardado == "por_defecto":
-        return {"error": "Servidor vacío. Configura tu SID en el panel web primero."}, 400
+        return {"error": "Servidor vacio. Configura el panel web primero."}, 400
 
-    # Extraer el SID según el canal de transmisión elegido
-    sid_roblox = None
-    if metodo == 'GET':
-        sid_roblox = argumentos.get('sid')
-    elif metodo == 'POST':
-        if json_body:
+    # 1. INTENTO PRINCIPAL: Buscar el SID en las cabeceras (Headers) enviados por Roblox
+    sid_roblox = cabeceras.get('sid')
+
+    # 2. INTENTOS DE RESPALDO: Si no viene en los headers, buscar en URL o JSON
+    if not sid_roblox:
+        if metodo == 'GET':
+            sid_roblox = argumentos.get('sid')
+        elif metodo == 'POST' and json_body:
             sid_roblox = json_body.get('sid')
 
-    # Validar contraseña
-    if not sid_roblox or sid_roblox != sid_guardado:
-        print(f"[ACCESO RECHAZADO] Canal {metodo}. SID incorrecto.")
+    # 3. Validar contraseña (SID)
+    if not sid_roblox or str(sid_roblox).strip() != str(sid_guardado).strip():
+        print(f"[ACCESO DENEGADO 401] SID Recibido: '{sid_roblox}' | SID Esperado: '{sid_guardado}'")
         return {"error": "SID no coincide o no autorizado"}, 401
 
-    # Respuesta exitosa para los pines Data Out
-    print(f"[CONEXIÓN EXITOSA {metodo}] Transmitiendo pines: {estado_pines_actual}")
+    # 4. Éxito total: Enviar los 8 bits al HTTP Transmitter
+    print(f"[CONEXION EXITOSA] Entregando pines via cabeceras HTTP: {estado_pines_actual}")
     return {
         "success": True,
         "data": estado_pines_actual
