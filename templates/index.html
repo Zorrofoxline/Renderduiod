@@ -9,8 +9,13 @@
         .container { max-width: 450px; margin: 40px auto; background: #1a1a24; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
         input[type="text"] { width: 90%; padding: 12px; margin: 15px 0; border-radius: 6px; border: 2px solid #333; background: #222; color: #fff; font-size: 16px; text-align: center; }
         .pins-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 25px 0; }
+        
+        /* Botón apagado (0) */
         .pin-btn { background: #2c2c38; border: 2px solid #3e3e50; color: #b5b5c3; padding: 18px 0; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-        .pin-btn.active { background: #27ae60; border-color: #2ecc71; color: #fff; box-shadow: 0 0 12px rgba(46,204,113,0.4); }
+        
+        /* Botón encendido (1) - ¡Se activa dinámicamente con JS! */
+        .pin-btn.active { background: #27ae60 !important; border-color: #2ecc71 !important; color: #fff !important; box-shadow: 0 0 12px rgba(46,204,113,0.4); }
+        
         button.submit-btn { background: #2980b9; color: white; padding: 14px 0; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 96%; margin-top: 10px; }
         button.submit-btn:hover { background: #3498db; }
         h2 { margin-top: 0; color: #3498db; }
@@ -24,26 +29,35 @@
         <input type="text" id="sid" placeholder="Escribe tu SID secreto..." required>
         
         <div class="pins-grid">
-            <button class="pin-btn" onclick="togglePin(0)">P0</button>
-            <button class="pin-btn" onclick="togglePin(1)">P1</button>
-            <button class="pin-btn" onclick="togglePin(2)">P2</button>
-            <button class="pin-btn" onclick="togglePin(3)">P3</button>
-            <button class="pin-btn" onclick="togglePin(4)">P4</button>
-            <button class="pin-btn" onclick="togglePin(5)">P5</button>
-            <button class="pin-btn" onclick="togglePin(6)">P6</button>
-            <button class="pin-btn" onclick="togglePin(7)">P7</button>
+            <button type="button" class="pin-btn" onclick="togglePin(0)">P0</button>
+            <button type="button" class="pin-btn" onclick="togglePin(1)">P1</button>
+            <button type="button" class="pin-btn" onclick="togglePin(2)">P2</button>
+            <button type="button" class="pin-btn" onclick="togglePin(3)">P3</button>
+            <button type="button" class="pin-btn" onclick="togglePin(4)">P4</button>
+            <button type="button" class="pin-btn" onclick="togglePin(5)">P5</button>
+            <button type="button" class="pin-btn" onclick="togglePin(6)">P6</button>
+            <button type="button" class="pin-btn" onclick="togglePin(7)">P7</button>
         </div>
 
         <button class="submit-btn" onclick="enviarConfiguracion()">ACTUALIZAR SERVIDOR</button>
     </div>
 
     <script>
-        let pines =;
+        // Arreglo global de 8 bits
+        let pines = [0, 0, 0, 0, 0, 0, 0, 0];
 
         function togglePin(index) {
+            // Cambiar el valor lógico (0 o 1)
             pines[index] = pines[index] === 0 ? 1 : 0;
+            
+            // Forzar el cambio visual agregando/removiendo la clase css
             const btn = document.getElementsByClassName('pin-btn')[index];
-            btn.classList.toggle('active');
+            if (pines[index] === 1) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+            console.log("Estado de pines actual:", pines);
         }
 
         function enviarConfiguracion() {
@@ -58,9 +72,9 @@
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    alert(data.message); // Dispara la alerta en tu pantalla
+                    alert(data.message);
                 } else {
-                    alert("Error: " + data.error);
+                    alert("Error del servidor: " + data.error);
                 }
             })
             .catch(err => alert("Error al transmitir los datos al servidor"));
