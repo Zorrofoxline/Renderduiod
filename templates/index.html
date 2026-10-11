@@ -5,28 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Control - Build Logic</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #121214; color: #fff; padding: 20px; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #121214; color: #fff; padding: 20px; margin: 0; }
         .container { max-width: 450px; margin: 40px auto; background: #1a1a24; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
         input[type="text"] { width: 90%; padding: 12px; margin: 15px 0; border-radius: 6px; border: 2px solid #333; background: #222; color: #fff; font-size: 16px; text-align: center; }
-        input[type="text"]:focus { border-color: #2980b9; outline: none; }
         .pins-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 25px 0; }
-        .pin-btn { background: #2c2c38; border: 2px solid #3e3e50; color: #b5b5c3; padding: 18px 0; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; }
+        .pin-btn { background: #2c2c38; border: 2px solid #3e3e50; color: #b5b5c3; padding: 18px 0; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
         .pin-btn.active { background: #27ae60; border-color: #2ecc71; color: #fff; box-shadow: 0 0 12px rgba(46,204,113,0.4); }
-        button.submit-btn { background: #2980b9; color: white; padding: 14px 0; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 96%; transition: background 0.2s; margin-top: 10px; }
+        button.submit-btn { background: #2980b9; color: white; padding: 14px 0; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 96%; margin-top: 10px; }
         button.submit-btn:hover { background: #3498db; }
         h2 { margin-top: 0; color: #3498db; }
-        h3 { color: #a1a1b5; font-size: 16px; font-weight: normal; margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>BUILD LOGIC! PANEL</h2>
-        <p style="color: #63637b; font-size: 14px; margin-bottom: 25px;">Configura tus datos para el HTTP Transmitter</p>
+        <p style="color: #63637b; font-size: 14px;">Configura tus datos para el HTTP Transmitter</p>
         
-        <label style="font-weight: bold; color: #e1e1e6;">SYSTEM SID</label>
         <input type="text" id="sid" placeholder="Escribe tu SID secreto..." required>
         
-        <h3>Interruptores de Pines (0 al 7)</h3>
         <div class="pins-grid">
             <button class="pin-btn" onclick="togglePin(0)">P0</button>
             <button class="pin-btn" onclick="togglePin(1)">P1</button>
@@ -61,12 +57,14 @@
             })
             .then(res => res.json())
             .then(data => {
-                if(data.success) alert("¡Servidor sincronizado correctamente!");
-                else alert("Error: " + data.error);
+                if(data.success) {
+                    alert(data.message); // Dispara la alerta en tu pantalla
+                } else {
+                    alert("Error: " + data.error);
+                }
             })
-            .catch(err => alert("Error al conectar con el servidor"));
+            .catch(err => alert("Error al transmitir los datos al servidor"));
         }
     </script>
 </body>
 </html>
-
