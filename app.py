@@ -12,7 +12,7 @@ def guardar_en_disco(sid, pines):
 
 def leer_de_disco():
     if not os.path.exists(DATABASE_FILE):
-        pines_defecto =
+        pines_defecto = [0,0,0,0,0,0,0,0]
         guardar_en_disco("por_defecto", pines_defecto)
         return "por_defecto", pines_defecto
     try:
